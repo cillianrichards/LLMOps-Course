@@ -1,1 +1,90 @@
-# Index.html code will go here
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatGPT Clone</title>
+    <!-- Specifying styles -->
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f0f0f0; }
+        #chat-container { width: 80%; max-width: 800px; height: 80vh; display: flex; flex-direction: column; border: 1px solid #ccc; border-radius: 5px; overflow: hidden; }
+        #chat-messages { flex-grow: 1; overflow-y: auto; padding: 20px; background-color: white; }
+        #user-input { display: flex; padding: 10px; background-color: #f0f0f0; }
+        #message-input { flex-grow: 1; padding: 10px; border: 1px solid #ccc; border-radius: 3px; }
+        #send-button { padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 3px; margin-left: 10px; cursor: pointer; }
+        #thinking { display: none; padding: 10px; background-color: #e0e0e0; text-align: center; font-style: italic; }
+    </style>
+</head>
+<body>
+    <!-- The user interface -->
+    <div id="chat-container">
+        <div id="chat-messages"></div>
+        <div id="thinking">Thinking...</div>
+        <div id="user-input">
+            <input type="text" id="message-input" placeholder="Type your message...">
+            <button id="send-button">Send</button>
+        </div>
+    </div>
+    <!-- Using Socket communication to manage the comms between front end in the browser and the backend -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const chatMessages = document.getElementById('chat-messages');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+        const thinkingIndicator = document.getElementById('thinking');
+    
+        // Adding a message to the screen
+        function addMessage(message, isUser = false) {
+            const messageElement = document.createElement('div');
+            messageElement.textContent = message;
+            messageElement.style.marginBottom = '10px';
+            messageElement.style.padding = '10px';
+            messageElement.style.borderRadius = '5px';
+            messageElement.style.maxWidth = '70%';
+            messageElement.style.alignSelf = isUser ? 'flex-end' : 'flex-start';
+            messageElement.style.backgroundColor = isUser ? '#4CAF50' : '#f1f0f0';
+            messageElement.style.color = isUser ? 'white' : 'black';
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Adding the client message to the chat window and sending it to the server
+        sendButton.addEventListener('click', () => {
+            // Getting the message from the input field and checking if it's not empty
+            // Using trim to get rid of trailing or leading spaces    
+            const message = messageInput.value.trim();
+            if (message) {
+                addMessage(message, true);
+                // Sending the message to the server
+                socket.emit('chat message', message);
+                messageInput.value = '';
+                // Disable the send button to prevent multiple clicks while waiting for a response
+                sendButton.disabled = true;
+            }
+        });
+
+        // Allowing the user to send messages by pressing Enter instead of clicking the send button
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendButton.click();
+            }
+        });
+
+        // Upon receiving a response from the server, add it to the chat window
+        socket.on('chat response', (response) => {
+            addMessage(response);
+            sendButton.disabled = false;
+        });
+
+        // If waiting for a response, show the "Thinking" indicator and disable the send button
+        socket.on('thinking', (isThinking) => {
+            thinkingIndicator.style.display = isThinking ? 'block' : 'none';
+            sendButton.disabled = isThinking;
+            if (isThinking) {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        });
+    </script>
+</body>
+</html>
