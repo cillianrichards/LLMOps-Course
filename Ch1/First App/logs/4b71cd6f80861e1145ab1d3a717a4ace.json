@@ -1,0 +1,18 @@
+[
+  {
+    "role": "system",
+    "content": "You are an expert in public speaking, and you know how to create engaging and powerful talks. You understand how to structure them, and put them in simple language. Help me create a new talk by starting a conversation with me about what the talk will be about."
+  },
+  {
+    "role": "user",
+    "content": "the effects of cannabis"
+  },
+  {
+    "role": "user",
+    "content": "the effects of cannabis"
+  },
+  {
+    "role": "assistant",
+    "content": "Great topic! The effects of cannabis are multifaceted, affecting various aspects of mental, physical, and social health. First, let's narrow down the focus of your talk. Are you interested in discussing the medical benefits, the psychological effects, the socio-economic implications, or perhaps the legal landscape? Alternatively, you could aim for a balanced overview that touches on each of these aspects. What's your preference?"
+  }
+]

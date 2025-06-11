@@ -1,3 +1,8 @@
+// Seems like I need to unset the OPENAI_API_KEY before loading dotenv, otherwise it will not work
+// unset OPENAI_API_KEY
+require('dotenv').config({ path: './.env' });
+console.log("OPENAI_API_KEY loaded:", process.env.OPENAI_API_KEY);
+
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
@@ -5,15 +10,15 @@ const path = require('path');
 // Creating a unique identifier for each conversation
 const fs = require('fs');
 const crypto = require('crypto');
-require('dotenv').config();
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
-const openai = require('./openai');
+// Including LLM wrapper
+const { callLLM } = require('./llm');
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -21,7 +26,7 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// System prompt for the OpenAI model
+// System prompt for the model
 
 const systemPrompt = "You are an expert in public speaking, and you know how to create engaging and powerful talks. You understand how to structure them, and put them in simple language. Help me create a new talk by starting a conversation with me about what the talk will be about.";
 
@@ -72,15 +77,9 @@ io.on('connection', (socket) => {
       // Log the conversation history again now it has changed
       logConversation(userId, conversationHistory);
 
-      // Sending the conversation history to OpenAI API for content generation (and defining the model)
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: conversationHistory,
-      });
+      // Getting the response from the LLM API defined in llm.js
+      const response = await callLLM("gpt-4o", conversationHistory);
 
-      // Extracting the response. Atm the model only returns the first response. Can be changed to return multiple. 
-      const response = completion.choices[0].message.content;
-      
       // Add assistant response to conversation history
       conversationHistory.push({ role: "assistant", content: response });
 
